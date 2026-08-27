@@ -1,15 +1,15 @@
 /**
  * LifePulse 메인 애플리케이션 진입점 및 사이드패널 위젯 렌더러 (월간/주간 분석 지원)
  */
-import { store } from './storage.js?v=4.4.0';
-import { CalendarView } from './calendar.js?v=4.4.0';
-import { ModalController } from './modal.js?v=4.4.0';
-import { getWegovyStatus, INJECTION_SITES, getActiveMedication, MEDICATIONS } from './wegovy.js?v=4.4.0';
-import { getMonthlyLedgerSummary, getWeeklyLedgerSummary } from './ledger.js?v=4.4.0';
-import { getDailyMealsSummary, MEAL_TYPES } from './meals.js?v=4.4.0';
-import { getDailyWorkoutsSummary, WORKOUT_TYPES } from './workouts.js?v=4.4.0';
-import { renderWeightChart, renderExpenseDonutChart, renderWeeklyExpenseBarChart } from './charts.js?v=4.4.0';
-import { QuoteBannerController } from './quotes.js?v=4.4.0';
+import { store } from './storage.js?v=5.0.0';
+import { CalendarView } from './calendar.js?v=5.0.0';
+import { ModalController } from './modal.js?v=5.0.0';
+import { getWegovyStatus, INJECTION_SITES, getActiveMedication, MEDICATIONS } from './wegovy.js?v=5.0.0';
+import { getMonthlyLedgerSummary, getWeeklyLedgerSummary } from './ledger.js?v=5.0.0';
+import { getDailyMealsSummary, MEAL_TYPES } from './meals.js?v=5.0.0';
+import { getDailyWorkoutsSummary, WORKOUT_TYPES } from './workouts.js?v=5.0.0';
+import { renderWeightChart, renderExpenseDonutChart, renderWeeklyExpenseBarChart } from './charts.js?v=5.0.0';
+import { QuoteBannerController } from './quotes.js?v=5.0.0';
 
 export class App {
   constructor() {
