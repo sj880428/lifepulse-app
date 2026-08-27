@@ -6,8 +6,9 @@ import { INJECTION_SITES, COMMON_SIDE_EFFECTS, getWegovyStatus, MEDICATIONS, get
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from './ledger.js?v=4.0.0';
 import { MEAL_TYPES, SATIETY_LEVELS, COMMON_FOOD_ITEMS, FOOD_CATEGORIES, parseFoodsAndCalculateNutrition, estimateCaloriesFromText, searchFoodDatabase, searchOnlineFoodDatabase, saveCustomFood, getCustomFoods, analyzeFoodPhotoWithGemini, analyzeFoodTextWithGemini, getDailyMealsSummary } from './meals.js?v=4.0.0';
 import { WORKOUT_TYPES, INTENSITY_LEVELS, estimateWorkoutCalories, getDailyWorkoutsSummary } from './workouts.js?v=4.0.0';
-import { checkHoliday } from './holidays.js?v=4.0.0';
-import { generateIcsContent, downloadIcsFile, parseAndImportIcs } from './calendarSync.js?v=4.1.0';
+import { checkHoliday } from './holidays.js?v=5.0.0';
+import { generateIcsContent, downloadIcsFile, parseAndImportIcs } from './calendarSync.js?v=5.0.0';
+import { generateSyncCode, pushDataToCloud, pullDataFromCloud } from './sync.js?v=5.1.0';
 
 export class ModalController {
   constructor(app) {
@@ -76,6 +77,54 @@ export class ModalController {
         store.clearAllSampleData();
         this.closeAll();
         this.app.showToast('🎉 예시 데이터가 모두 정리되었습니다! 이제 나만의 진짜 건강 & 가계부 기록을 시작해보세요! 🌱');
+      }
+    });
+
+    // ⚡ 실시간 클라우드 동기화 이벤트
+    document.getElementById('btnGenerateNewSyncCode')?.addEventListener('click', async () => {
+      const code = generateSyncCode();
+      store.saveSettings({ syncCode: code });
+      this.renderCloudSyncStatus();
+      if (this.app?.cloudSync) {
+        await this.app.cloudSync.pushCurrentData(true);
+      }
+      this.app.showToast(`✨ 새 동기화 코드 '${code}'가 발급되어 클라우드에 연결되었습니다!`);
+    });
+
+    document.getElementById('btnConnectSyncCode')?.addEventListener('click', async () => {
+      const input = document.getElementById('inputSyncCode');
+      const code = input?.value.trim().toUpperCase();
+      if (!code) {
+        this.app.showToast('동기화 코드를 입력해주세요! (예: LP-8842)');
+        return;
+      }
+      store.saveSettings({ syncCode: code });
+      this.renderCloudSyncStatus();
+      if (this.app?.cloudSync) {
+        await this.app.cloudSync.checkAndPullLatest(true);
+      }
+    });
+
+    document.getElementById('btnCopySyncCode')?.addEventListener('click', () => {
+      const settings = (store.getSettings && typeof store.getSettings === 'function') ? store.getSettings() : {};
+      if (settings.syncCode) {
+        navigator.clipboard.writeText(settings.syncCode);
+        this.app.showToast(`📋 동기화 코드 '${settings.syncCode}'가 복사되었습니다! (다른 기기 설정에 입력하세요)`);
+      }
+    });
+
+    document.getElementById('btnManualCloudSync')?.addEventListener('click', async () => {
+      if (this.app?.cloudSync) {
+        await this.app.cloudSync.pushCurrentData(false);
+        await this.app.cloudSync.checkAndPullLatest(true);
+      }
+    });
+
+    document.getElementById('btnDisconnectSync')?.addEventListener('click', () => {
+      if (confirm('클라우드 실시간 동기화를 해제하시겠습니까?\n(로컬에 저장된 기록은 삭제되지 않습니다)')) {
+        store.saveSettings({ syncCode: '' });
+        this.renderCloudSyncStatus();
+        this.app.showToast('동기화 연결이 해제되었습니다.');
       }
     });
 
@@ -761,6 +810,7 @@ export class ModalController {
     const apiKeyInput = document.getElementById('settingGeminiApiKey');
     if (apiKeyInput) apiKeyInput.value = settings.geminiApiKey || '';
     if (this.app?.updateThemeButton) this.app.updateThemeButton(settings.theme || 'dark');
+    this.renderCloudSyncStatus();
 
     document.getElementById('btnClearWegovyLogs').onclick = () => {
       if (confirm('등록된 모든 투약 및 체중 기록을 완전히 삭제하시겠습니까? (되돌릴 수 없습니다)')) {
@@ -771,6 +821,33 @@ export class ModalController {
     };
 
     this.showModal(this.healthSettingsModal);
+  }
+
+  renderCloudSyncStatus() {
+    const settings = (store.getSettings && typeof store.getSettings === 'function') ? store.getSettings() : {};
+    const badge = document.getElementById('cloudSyncBadge');
+    const activeBox = document.getElementById('cloudSyncActiveBox');
+    const inputBox = document.getElementById('cloudSyncInputBox');
+    const displayCode = document.getElementById('displaySyncCode');
+
+    if (settings.syncCode && settings.syncCode.trim()) {
+      if (badge) {
+        badge.style.background = 'rgba(16, 185, 129, 0.15)';
+        badge.style.color = 'var(--accent-emerald)';
+        badge.textContent = '🟢 실시간 연결됨';
+      }
+      if (activeBox) activeBox.style.display = 'block';
+      if (inputBox) inputBox.style.display = 'none';
+      if (displayCode) displayCode.textContent = settings.syncCode;
+    } else {
+      if (badge) {
+        badge.style.background = 'var(--bg-subtle)';
+        badge.style.color = 'var(--text-muted)';
+        badge.textContent = '⚪ 미연결';
+      }
+      if (activeBox) activeBox.style.display = 'none';
+      if (inputBox) inputBox.style.display = 'flex';
+    }
   }
 
   handleHealthSettingsSubmit(e) {

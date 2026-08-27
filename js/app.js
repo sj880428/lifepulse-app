@@ -10,12 +10,14 @@ import { getDailyMealsSummary, MEAL_TYPES } from './meals.js?v=5.0.0';
 import { getDailyWorkoutsSummary, WORKOUT_TYPES } from './workouts.js?v=5.0.0';
 import { renderWeightChart, renderExpenseDonutChart, renderWeeklyExpenseBarChart } from './charts.js?v=5.0.0';
 import { QuoteBannerController } from './quotes.js?v=5.0.0';
+import { CloudSyncManager } from './sync.js?v=5.1.0';
 
 export class App {
   constructor() {
     this.calendar = new CalendarView(this);
     this.modal = new ModalController(this);
     this.quoteBanner = new QuoteBannerController();
+    this.cloudSync = new CloudSyncManager(store, this);
     this.weightPeriodMode = 'month'; // 'week' | 'month' | 'all'
     this.ledgerPeriodMode = 'month'; // 'month' | 'week'
     this.initTheme();

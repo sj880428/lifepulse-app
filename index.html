@@ -15,7 +15,7 @@
   <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
   <link rel="apple-touch-icon" href="icons/icon.svg">
   
-  <link rel="stylesheet" href="css/style.css?v=5.0.0">
+  <link rel="stylesheet" href="css/style.css?v=5.1.0">
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 </head>
@@ -643,6 +643,39 @@
             🛠️ 앱 기능 & 연동 관리
           </h5>
 
+          <!-- ⚡ 실시간 클라우드 기기 동기화 (PC ↔ 스마트폰) -->
+          <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.08) 100%); border: 1.5px solid var(--accent-primary); border-radius: 10px; padding: 0.85rem; margin-bottom: 0.3rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-primary);">⚡ 실시간 기기 동기화 (PC ↔ 스마트폰)</span>
+              <span class="badge" id="cloudSyncBadge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); font-size: 0.7rem;">⚪ 미연결</span>
+            </div>
+            <p class="text-muted" style="font-size: 0.75rem; margin-bottom: 0.6rem; line-height: 1.4;">
+              파일 전송 없이, <strong>동기화 코드</strong>를 다른 기기에 넣으면 PC와 스마트폰이 <strong>24시간 실시간 자동 연동</strong>됩니다!
+            </p>
+
+            <div id="cloudSyncActiveBox" style="display: none; margin-bottom: 0.6rem; background: var(--bg-surface); padding: 0.6rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">내 동기화 코드:</span>
+                <strong id="displaySyncCode" style="font-size: 1.05rem; letter-spacing: 1px; color: var(--accent-emerald);">LP-XXXX</strong>
+              </div>
+              <div style="display: flex; gap: 4px;">
+                <button type="button" class="btn btn-outline w-100" id="btnCopySyncCode" style="font-size: 0.75rem; padding: 0.3rem 0.5rem;">📋 코드 복사</button>
+                <button type="button" class="btn btn-primary w-100" id="btnManualCloudSync" style="font-size: 0.75rem; padding: 0.3rem 0.5rem;">🔄 지금 동기화</button>
+                <button type="button" class="btn btn-outline text-danger" id="btnDisconnectSync" style="font-size: 0.75rem; padding: 0.3rem 0.5rem;" title="동기화 해제">✕</button>
+              </div>
+            </div>
+
+            <div id="cloudSyncInputBox" style="display: flex; flex-direction: column; gap: 0.4rem;">
+              <div style="display: flex; gap: 4px;">
+                <input type="text" id="inputSyncCode" class="form-control" placeholder="동기화 코드 입력 (예: LP-7829)" style="font-size: 0.8rem; text-transform: uppercase; font-weight: 700;">
+                <button type="button" class="btn btn-primary" id="btnConnectSyncCode" style="white-space: nowrap; font-size: 0.78rem; padding: 0.3rem 0.7rem;">연결</button>
+              </div>
+              <button type="button" class="btn btn-outline w-100" id="btnGenerateNewSyncCode" style="font-size: 0.75rem; padding: 0.35rem 0.5rem; color: var(--accent-primary); border-color: rgba(99, 102, 241, 0.4);">
+                ✨ 나만의 새 동기화 코드 발급받기
+              </button>
+            </div>
+          </div>
+
           <!-- 1. 다크/라이트 테마 전환 -->
           <button type="button" class="btn btn-outline w-100" id="btnToggleTheme" style="justify-content: space-between; padding: 0.55rem 0.9rem;">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -958,6 +991,6 @@
 
   </div>
 
-  <script type="module" src="js/app.js?v=5.0.0"></script>
+  <script type="module" src="js/app.js?v=5.1.0"></script>
 </body>
 </html>
