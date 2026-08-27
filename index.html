@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>LifePulse - 헬스 & 가계부 스마트 캘린더</title>
+  <meta name="description" content="대한민국 공휴일/대체공휴일 자동 표시, 위고비/마운자로 건강 트래커, 일자별 스마트 가계부 기능을 하나로 통합한 맞춤형 올인원 캘린더">
+  
+  <!-- 모바일 웹앱 & 홈 화면에 추가(PWA) 지원 -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LifePulse">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  
+  <link rel="stylesheet" href="css/style.css?v=4.2.0">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+</head>
+<body>
+
+  <!-- 상단 앱 네비게이션 헤더 -->
+  <header class="app-header">
+    <!-- 1층: 브랜드 로고 & 유틸리티 버튼들 (설정, 백업, 테마, 새기록) -->
+    <div class="header-top-row">
+      <div class="brand-section">
+        <div class="brand-logo">✨</div>
+        <div class="brand-text-wrap">
+          <span class="brand-title">LifePulse</span>
+          <span class="brand-badge">헬스케어 & 가계부</span>
+        </div>
+      </div>
+
+      <div class="header-utility-actions">
+        <button class="btn-icon-action" id="btnOpenUserGuide" title="📖 LifePulse 전체 사용 설명서" style="border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.08);">
+          <span class="action-icon">📖</span>
+          <span class="action-label" style="color: var(--accent-primary); font-weight: 700;">설명서</span>
+        </button>
+        <button class="btn-icon-action" id="btnOpenHealthSettings" title="목표 체중, 캘린더 연동, 백업, 테마 설정">
+          <span class="action-icon">⚙️</span>
+          <span class="action-label">설정</span>
+        </button>
+        <button class="btn btn-primary btn-header-add" id="btnHeaderAdd">
+          <span class="btn-add-plus">+</span>
+          <span class="btn-add-text">새 기록</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2층: 날짜 네비게이션 & 뷰 모드 전환 (월간 / 주간 / 일간 / 목록) -->
+    <div class="header-bottom-row">
+      <div class="period-nav-group">
+        <button class="nav-arrow-btn" id="btnPrevPeriod" title="이전">◀</button>
+        <div class="period-title" id="currentPeriodLabel">2026년 8월</div>
+        <button class="nav-arrow-btn" id="btnNextPeriod" title="다음">▶</button>
+        <button class="btn-today" id="btnTodayJump">오늘</button>
+      </div>
+
+      <div class="view-mode-selector">
+        <button class="view-toggle-btn active" data-view="month">월간</button>
+        <button class="view-toggle-btn" data-view="week">주간</button>
+        <button class="view-toggle-btn" data-view="day">일간</button>
+        <button class="view-toggle-btn" data-view="list">목록</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 다이어트 & 건강 동기부여 격언 배너 -->
+  <section class="diet-quote-banner" id="dietQuoteBanner">
+    <div class="quote-icon-badge">
+      <span class="sparkle-icon">✨</span>
+      <span>오늘의 다이어트 마인드셋</span>
+    </div>
+    <div class="quote-text-wrap">
+      <p class="quote-text" id="quoteText">"다이어트는 완벽함이 아니라 꾸준함의 연속입니다."</p>
+      <span class="quote-author" id="quoteAuthor">— 지속 가능한 다이어트 습관</span>
+    </div>
+    <div class="quote-controls">
+      <button class="btn-quote-control" id="btnPrevQuote" title="이전 격언">‹</button>
+      <button class="btn-quote-control" id="btnRandomQuote" title="랜덤 명언">🎲</button>
+      <button class="btn-quote-control" id="btnNextQuote" title="다음 격언">›</button>
+    </div>
+  </section>
+
+  <!-- 레이어 필터 툴바 -->
+  <div class="filter-bar">
+    <div class="layer-filters-group">
+      <label class="filter-toggle-label">
+        <input type="checkbox" id="filterEvents" checked>
+        <span class="filter-indicator indicator-event"></span>
+        <span>일반 일정</span>
+      </label>
+      <label class="filter-toggle-label">
+        <input type="checkbox" id="filterWegovy" checked>
+        <span class="filter-indicator indicator-wegovy"></span>
+        <span>위고비 투약 & 체중</span>
+      </label>
+      <label class="filter-toggle-label">
+        <input type="checkbox" id="filterMeals" checked>
+        <span class="filter-indicator indicator-meal"></span>
+        <span>식사 (섭취)</span>
+      </label>
+      <label class="filter-toggle-label">
+        <input type="checkbox" id="filterWorkouts" checked>
+        <span class="filter-indicator indicator-workout"></span>
+        <span>운동 (소모)</span>
+      </label>
+      <label class="filter-toggle-label">
+        <input type="checkbox" id="filterLedger" checked>
+        <span class="filter-indicator indicator-ledger"></span>
+        <span>가계부 지출 / 수입</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- 메인 레이아웃: 캘린더 영역 + 우측 헬스/가계부 위젯 패널 -->
+  <main class="app-main-layout">
+    <!-- 좌측 캘린더 렌더러 -->
+    <section class="calendar-main-area" id="calendarContainer">
+      <!-- 동적 렌더링 (Month, Week, Day, List) -->
+    </section>
+
+    <!-- 우측 위고비 & 가계부 사이드 대시보드 -->
+    <aside class="app-side-panel">
+      <!-- 탭 셀렉터 -->
+      <div class="side-panel-tabs">
+        <button class="side-tab-btn active" data-panel="wegovy">💉 위고비 헬스케어</button>
+        <button class="side-tab-btn" data-panel="ledger">💰 가계부 분석</button>
+      </div>
+
+      <!-- 위고비 대시보드 탭 -->
+      <div class="side-content-panel active" id="panelWegovy">
+        <div id="panelWegovyContent"></div>
+      </div>
+
+      <!-- 가계부 대시보드 탭 -->
+      <div class="side-content-panel" id="panelLedger">
+        <div id="panelLedgerContent"></div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- 플로팅 액션 버튼 (모바일 및 퀵 액션) -->
+  <button class="btn-fab" id="btnFabAdd" title="새 기록 추가">+</button>
+
+  <!-- 토스트 알림 메시지 바 -->
+  <div class="app-toast" id="appToast">알림 메시지</div>
+
+  <!-- 모달 오버레이 & 팝업 모달들 -->
+  <div class="modal-overlay" id="modalOverlay">
+
+    <!-- 1. 통합 새 기록 / 수정 모달 -->
+    <div class="modal-window" id="addEditModal">
+      <div class="modal-header">
+        <h3 id="modalTitle">새 기록 추가</h3>
+        <button class="btn-close-modal" title="닫기">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- 5개 탭 전환 바 (식사 & 운동 최우선 배치) -->
+        <div class="modal-nav-tabs">
+          <button class="modal-tab-btn active" data-tab="meal">🍽️ 식사</button>
+          <button class="modal-tab-btn" data-tab="workout">🏃 운동</button>
+          <button class="modal-tab-btn" data-tab="wegovy" id="modalTabWegovy">💉 투약·체중</button>
+          <button class="modal-tab-btn" data-tab="event">📅 일정</button>
+          <button class="modal-tab-btn" data-tab="ledger">💰 가계부</button>
+        </div>
+
+        <!-- 탭 1: 식사 및 칼로리 폼 -->
+        <div class="modal-tab-content active" id="tab-meal">
+          <form id="mealForm">
+            <div class="form-group">
+              <label>식사 구분 *</label>
+              <div class="meal-type-selector">
+                <label class="meal-type-btn">
+                  <input type="radio" name="mealType" value="breakfast">
+                  <span>🌅 아침</span>
+                </label>
+                <label class="meal-type-btn">
+                  <input type="radio" name="mealType" value="lunch" checked>
+                  <span>☀️ 점심</span>
+                </label>
+                <label class="meal-type-btn">
+                  <input type="radio" name="mealType" value="dinner">
+                  <span>🌙 저녁</span>
+                </label>
+                <label class="meal-type-btn">
+                  <input type="radio" name="mealType" value="snack">
+                  <span>🥪 간식</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="mealDate">식사 날짜 *</label>
+                <input type="date" id="mealDate" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="mealKcal">총 칼로리 (kcal) *</label>
+                <div style="position: relative;">
+                  <input type="number" id="mealKcal" class="form-control" placeholder="예: 350" required style="font-weight: 800; color: var(--accent-amber);">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                <label for="mealFoods" style="margin: 0; font-weight: 700;">식사 메뉴 / 음식 이름 *</label>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                  <span id="badgeApiKeyStatus" style="font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; cursor: pointer; transition: all 0.2s;" title="클릭하여 API 키 설정 열기"></span>
+                  <span id="liveAiStatusIndicator" style="display: none; font-size: 0.72rem; color: var(--accent-primary); font-weight: 700;">✨ AI 분석 중...</span>
+                </div>
+              </div>
+              <input type="text" id="mealFoods" class="form-control mt-1" placeholder="예: 햇반 200그램 1개, 김, 참치 1캔" required>
+              
+              <!-- 스마트 음식 영양 검색기 (수박, 참외, 마라탕 등) -->
+              <div style="margin-top: 6px; position: relative;">
+                <div style="display: flex; gap: 4px; align-items: center;">
+                  <input type="text" id="foodSearchInput" class="form-control" placeholder="🔍 음식 백과사전 검색 (예: 수박, 참외, 복숭아, 마라탕, 포케...)" style="font-size: 0.78rem; padding: 0.38rem 0.6rem; border-color: rgba(245, 158, 11, 0.4);">
+                  <button type="button" id="btnFoodSearchClear" class="btn btn-outline" style="display: none; padding: 0.3rem 0.5rem; font-size: 0.75rem;">✕</button>
+                </div>
+                <!-- 검색 결과 팝업 -->
+                <div id="foodSearchResults" style="display: none; position: absolute; top: calc(100% + 3px); left: 0; right: 0; background: var(--bg-surface); border: 1.5px solid var(--accent-amber); border-radius: 8px; box-shadow: var(--shadow-lg); z-index: 100; max-height: 180px; overflow-y: auto; padding: 4px;"></div>
+              </div>
+
+              <!-- 실시간 인식된 음식 및 개별 칼로리 분해 배지 -->
+              <div id="liveNutritionBreakdown" style="display: none; margin-top: 6px; padding: 6px 10px; background: rgba(245, 158, 11, 0.08); border: 1px dashed rgba(245, 158, 11, 0.4); border-radius: 8px; font-size: 0.75rem;">
+                <div style="font-weight: 700; color: var(--accent-amber); margin-bottom: 3px; display: flex; align-items: center; justify-content: space-between;">
+                  <span>🔍 스마트 영양 분석 결과:</span>
+                  <span id="liveTotalKcalBadge" style="font-weight: 800; color: var(--accent-amber);">0 kcal</span>
+                </div>
+                <div id="liveBreakdownTags" style="display: flex; flex-wrap: wrap; gap: 4px;"></div>
+              </div>
+
+              <!-- 📸 AI 음식 사진 촬영/업로드 영양 분석 섹션 -->
+              <div class="ai-photo-nutrition-box" style="margin-top: 8px; padding: 8px 10px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(245, 158, 11, 0.08) 100%); border: 1.5px dashed rgba(99, 102, 241, 0.4); border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 1.15rem;">📸</span>
+                    <strong style="font-size: 0.8rem; color: var(--text-main);">음식 사진으로 AI 칼로리 자동 분석</strong>
+                  </div>
+                  <label for="aiFoodPhotoInput" class="btn btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; cursor: pointer; border-color: var(--accent-primary); color: var(--accent-primary); font-weight: 700; margin: 0;">
+                    사진 촬영 / 업로드 📷
+                  </label>
+                  <input type="file" id="aiFoodPhotoInput" accept="image/*" capture="environment" style="display: none;">
+                </div>
+                
+                <!-- 사진 미리보기 및 분석 진행 상태 -->
+                <div id="aiPhotoStatusWrap" style="display: none; margin-top: 6px; padding: 6px; background: var(--bg-surface); border-radius: 6px;">
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <img id="aiPhotoPreviewImg" src="" alt="음식 사진" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-subtle);">
+                    <div style="flex: 1; font-size: 0.75rem;">
+                      <div id="aiPhotoStatusText" style="font-weight: 700; color: var(--accent-primary);">🤖 AI가 음식 사진을 분석하는 중입니다...</div>
+                      <div id="aiPhotoStatusSub" style="color: var(--text-muted); font-size: 0.7rem;">음식 종류, 분량, 칼로리를 식별 중입니다.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 카테고리별 빠른 음식 선택 바 -->
+              <div style="margin-top: 8px;">
+                <div class="food-cat-pills" id="foodCategoryPills" style="display: flex; gap: 4px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none;">
+                  <!-- 동적 렌더링 -->
+                </div>
+                <div class="quick-food-chips-wrap mt-1" id="quickFoodChips">
+                  <!-- 동적 렌더링 -->
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>식사 후 포만감 수준</label>
+              <div class="satiety-selector" id="satietySelector">
+                <!-- 동적 렌더링 -->
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="mealMemo">식단 메모 (선택)</label>
+              <textarea id="mealMemo" class="form-control" rows="2" placeholder="예: 드레싱 적게 먹음, 포만감 빠르게 느낌"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-color: #f59e0b;">
+              🍽️ 식사 기록 저장하기
+            </button>
+          </form>
+        </div>
+
+        <!-- 탭 2: 운동 및 소모 칼로리 폼 -->
+        <div class="modal-tab-content" id="tab-workout">
+          <form id="workoutForm">
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                <label style="margin: 0;">운동 종류 *</label>
+                <button type="button" class="btn-text-link" id="btnOpenAppleWatchGuide" style="font-size: 0.75rem; color: #fa5252; text-decoration: none; cursor: pointer;">
+                  ⌚ 애플워치 연동 팁
+                </button>
+              </div>
+              <div class="workout-type-selector" id="workoutTypeSelector">
+                <!-- 동적 렌더링 -->
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="workoutDate">운동 날짜 *</label>
+                <input type="date" id="workoutDate" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="workoutDuration">운동 시간 (분) *</label>
+                <input type="number" id="workoutDuration" class="form-control" placeholder="예: 30" required style="font-weight: 800;">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>빠른 시간 선택</label>
+              <div class="quick-duration-wrap">
+                <button type="button" class="quick-dur-btn" data-min="15">+15분</button>
+                <button type="button" class="quick-dur-btn" data-min="30">+30분</button>
+                <button type="button" class="quick-dur-btn" data-min="45">+45분</button>
+                <button type="button" class="quick-dur-btn" data-min="60">+60분</button>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="workoutBurnedKcal">소모 칼로리 (kcal) *</label>
+                <input type="number" id="workoutBurnedKcal" class="form-control" placeholder="예: 250" required style="font-weight: 800; color: #ef4444;">
+              </div>
+              <div class="form-group">
+                <label for="workoutIntensity">운동 강도</label>
+                <select id="workoutIntensity" class="form-control">
+                  <option value="0.8">🌱 가벼움 (저강도)</option>
+                  <option value="1.0" selected>⚡ 보통 (중강도)</option>
+                  <option value="1.3">🔥 매우 격렬함 (고강도)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="workoutDistance">이동 거리 (km, 선택)</label>
+                <input type="number" step="0.01" id="workoutDistance" class="form-control" placeholder="예: 4.5">
+              </div>
+              <div class="form-group">
+                <label for="workoutHeartRate">평균 심박수 (bpm, 선택)</label>
+                <input type="number" id="workoutHeartRate" class="form-control" placeholder="예: 135">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="workoutMemo">운동 메모 / 컨디션</label>
+              <textarea id="workoutMemo" class="form-control" rows="2" placeholder="예: 인터벌 러닝 진행, 땀 많이 흘림"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border-color: #ef4444;">
+              🏃 운동 기록 저장하기
+            </button>
+          </form>
+        </div>
+        <!-- 탭 3: 위고비 / 마운자로 투약 & 건강 폼 -->
+        <div class="modal-tab-content" id="tab-wegovy">
+          <form id="wegovyForm">
+            <div class="form-group">
+              <label for="wegMedType">투약 의약품 종류</label>
+              <select id="wegMedType" class="form-control">
+                <option value="wegovy">💉 위고비 (Wegovy - 세마글루타이드)</option>
+                <option value="mounjaro">💉 마운자로 (Mounjaro - 티르제파타이드)</option>
+                <option value="saxenda">💉 삭센다 (Saxenda - 리라글루타이드)</option>
+              </select>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="wegDate">투약 날짜 *</label>
+                <input type="date" id="wegDate" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="wegDose">투약 용량 *</label>
+                <select id="wegDose" class="form-control" required>
+                  <!-- 동적 렌더링 -->
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>주사 투약 부위 선택 (부위 순환 권장)</label>
+              <div class="site-chips-grid" id="injectionSiteGrid">
+                <!-- 동적 렌더링 -->
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="wegWeight">현재 체중 (kg)</label>
+              <input type="number" step="0.1" id="wegWeight" class="form-control" placeholder="예: 79.5">
+            </div>
+
+            <div class="form-group">
+              <label>부작용 및 증상 체크</label>
+              <div class="side-effects-wrap" id="sideEffectChips">
+                <!-- 동적 렌더링 -->
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="wegMemo">투약 메모 / 식욕 및 컨디션</label>
+              <textarea id="wegMemo" class="form-control" rows="2" placeholder="예: 주사 부위 통증 없음, 식욕 억제감 뚜렷함"></textarea>
+            </div>
+            <button type="submit" class="btn btn-emerald-outline w-100" id="btnSubmitWegovy" style="background: var(--accent-emerald); color: #fff;">
+              💉 투약 기록 저장
+            </button>
+          </form>
+        </div>
+
+        <!-- 탭 4: 일반 일정 폼 -->
+        <div class="modal-tab-content" id="tab-event">
+          <form id="eventForm">
+            <div class="form-group">
+              <label for="evTitle">일정 제목 *</label>
+              <input type="text" id="evTitle" class="form-control" placeholder="예: 정기 진료 상담, 친구 약속" required>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="evDate">날짜 *</label>
+                <input type="date" id="evDate" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="evTime">시간 (선택)</label>
+                <input type="time" id="evTime" class="form-control">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="evCategory">카테고리</label>
+              <select id="evCategory" class="form-control">
+                <option value="work">💼 업무 / 미팅</option>
+                <option value="personal">🎉 개인 / 약속</option>
+                <option value="health">🏥 건강 / 병원</option>
+                <option value="important">⭐ 중요</option>
+                <option value="other">🏷️ 기타</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="evMemo">메모</label>
+              <textarea id="evMemo" class="form-control" rows="3" placeholder="추가 메모를 입력하세요..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">일정 저장하기</button>
+          </form>
+        </div>
+
+        <!-- 탭 5: 가계부 지출/수입 폼 -->
+        <div class="modal-tab-content" id="tab-ledger">
+          <form id="ledgerForm">
+            <div class="form-group">
+              <label>구분</label>
+              <div class="type-radio-group">
+                <label class="type-radio-label">
+                  <input type="radio" name="ledgerType" value="expense" checked>
+                  지출 (-)
+                </label>
+                <label class="type-radio-label is-inc">
+                  <input type="radio" name="ledgerType" value="income">
+                  수입 (+)
+                </label>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="txDate">날짜 *</label>
+                <input type="date" id="txDate" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="txAmount">금액 (원) *</label>
+                <input type="number" id="txAmount" class="form-control" placeholder="예: 25000" min="1" required>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="txCategory">카테고리</label>
+                <select id="txCategory" class="form-control">
+                  <!-- 동적 렌더링 -->
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="txPayment">결제 수단</label>
+                <select id="txPayment" class="form-control">
+                  <option value="신용카드">신용카드</option>
+                  <option value="체크카드">체크카드</option>
+                  <option value="간편결제(페이)">간편결제(페이)</option>
+                  <option value="계좌이체">계좌이체</option>
+                  <option value="현금">현금</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="txMemo">사용처 / 내용</label>
+              <input type="text" id="txMemo" class="form-control" placeholder="예: 위고비 약제비 처방, 건강 샐러드 구매">
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">가계부 저장하기</button>
+          </form>
+        </div>
+
+        <!-- 선택된 날짜의 기존 등록 내역 요약 & 수정 섹션 (원클릭 통합 허브) -->
+        <div class="modal-day-history-section" id="modalDayHistorySection" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed var(--border-subtle);">
+          <div class="modal-day-history-header" style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.6rem;">
+            <span id="modalDayHistoryLabel">📋 이 날짜의 기록 내역</span>
+          </div>
+          <div id="modalDayHistoryList">
+            <!-- 동적 렌더링 -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- 3. 데이터 백업 / 복원 모달 -->
+    <div class="modal-window" id="backupModal">
+      <div class="modal-header">
+        <h3>데이터 백업 & 복원</h3>
+        <button class="btn-close-modal" title="닫기">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.85rem;">
+          기록하신 모든 일정, 위고비 투약 데이터, 가계부 내역은 브라우저에 안전하게 저장됩니다. JSON 형식으로 파일로 다운로드하거나 복원할 수 있습니다.
+        </p>
+        <div class="form-group">
+          <label>백업 데이터 (JSON)</label>
+          <textarea id="backupJsonArea" class="form-control" rows="8" style="font-family: monospace; font-size: 0.75rem;"></textarea>
+        </div>
+        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+          <button class="btn btn-primary" id="btnDownloadJson" style="flex: 1;">📥 파일로 다운로드</button>
+          <button class="btn btn-outline" id="btnApplyImport" style="flex: 1;">📤 JSON 텍스트 복원</button>
+        </div>
+        <button class="btn btn-outline text-danger w-100" id="btnResetMock">
+          🔄 초기 샘플 데이터로 리셋하기
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. 사용자 건강 프로필 & 목표 체중 설정 모달 -->
+    <div class="modal-window" id="healthSettingsModal">
+      <div class="modal-header">
+        <h3>⚙️ 건강 프로필 & 목표 설정</h3>
+        <button class="btn-close-modal" title="닫기">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="healthSettingsForm">
+          <div class="form-group">
+            <label>현재 치료 중인 의약품 선택</label>
+            <div class="med-radio-group">
+              <label class="med-radio-card">
+                <input type="radio" name="settingMedType" value="none">
+                <div class="med-card-inner">
+                  <span class="med-name">🌱 투약 안함 (일반 모드)</span>
+                  <span class="med-desc">순수 다이어트 식단/체중/운동/가계부</span>
+                </div>
+              </label>
+              <label class="med-radio-card">
+                <input type="radio" name="settingMedType" value="wegovy" checked>
+                <div class="med-card-inner">
+                  <span class="med-name">💉 위고비 (Wegovy)</span>
+                  <span class="med-desc">세마글루타이드 (0.25mg ~ 2.4mg)</span>
+                </div>
+              </label>
+              <label class="med-radio-card">
+                <input type="radio" name="settingMedType" value="mounjaro">
+                <div class="med-card-inner">
+                  <span class="med-name">💉 마운자로 (Mounjaro)</span>
+                  <span class="med-desc">티르제파타이드 (2.5mg ~ 15.0mg)</span>
+                </div>
+              </label>
+              <label class="med-radio-card">
+                <input type="radio" name="settingMedType" value="saxenda">
+                <div class="med-card-inner">
+                  <span class="med-name">💉 삭센다 (Saxenda)</span>
+                  <span class="med-desc">리라글루타이드 (0.6mg ~ 3.0mg)</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="settingStartWeight">시작 체중 (kg) *</label>
+              <input type="number" step="0.1" id="settingStartWeight" class="form-control" placeholder="84.5" required>
+            </div>
+            <div class="form-group">
+              <label for="settingTargetWeight">🎯 목표 체중 (kg) *</label>
+              <input type="number" step="0.1" id="settingTargetWeight" class="form-control" placeholder="68.0" required>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group" id="groupIntervalDays">
+              <label for="settingIntervalDays">투약 권장 주기</label>
+              <select id="settingIntervalDays" class="form-control">
+                <option value="7">주 1회 (7일 간격 - 위고비/마운자로 표준)</option>
+                <option value="1">매일 1회 (1일 간격 - 삭센다 표준)</option>
+                <option value="14">2주 1회 (14일 간격)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="settingTargetCalorie">🍽️ 목표 섭취 칼로리</label>
+              <input type="number" id="settingTargetCalorie" class="form-control" placeholder="1600" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="settingTargetBurnCalorie">🔥 하루 목표 운동 소모 칼로리 (kcal)</label>
+            <input type="number" id="settingTargetBurnCalorie" class="form-control" placeholder="400" required>
+          </div>
+
+          <!-- AI 비전 & 온라인 영양 분석용 Gemini API 키 설정 -->
+          <div class="form-group" style="margin-top: 0.8rem; padding: 0.75rem; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label for="settingGeminiApiKey" style="color: var(--accent-primary); font-weight: 800; margin: 0; font-size: 0.82rem;">
+                🤖 Google Gemini AI API 키 (선택)
+              </label>
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="font-size: 0.72rem; color: var(--accent-primary); text-decoration: underline;">무료 발급 ↗</a>
+            </div>
+            <input type="password" id="settingGeminiApiKey" class="form-control mt-1" placeholder="AIzaSy... (음식 사진 촬영 시 칼로리 100% 자동 분석)" style="font-size: 0.78rem;">
+            <small class="text-muted" style="font-size: 0.68rem; display: block; margin-top: 3px;">
+              💡 키를 등록해 두시면 음식 사진을 찍었을 때 AI가 음식과 칼로리를 완벽하게 자동 분석합니다.
+            </small>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 mt-2">
+            설정 및 목표 체중 저장하기
+          </button>
+        </form>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-subtle); margin: 1.2rem 0;">
+
+        <!-- 앱 관리 & 연동 허브 (테마, 캘린더, 백업, 모바일) -->
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
+          <h5 style="font-size: 0.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.2rem;">
+            🛠️ 앱 기능 & 연동 관리
+          </h5>
+
+          <!-- 1. 다크/라이트 테마 전환 -->
+          <button type="button" class="btn btn-outline w-100" id="btnToggleTheme" style="justify-content: space-between; padding: 0.55rem 0.9rem;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span id="themeIcon">☀️</span>
+              <span style="font-weight: 700;">화면 테마 변경</span>
+            </div>
+            <span class="badge badge-subtle" id="themeLabel" style="font-size: 0.72rem;">라이트 모드</span>
+          </button>
+
+          <!-- 2. 구글 & 애플 캘린더 양방향 연동 -->
+          <button type="button" class="btn btn-outline w-100" id="btnOpenCalendarSync" style="justify-content: space-between; padding: 0.55rem 0.9rem; color: #4285f4; border-color: rgba(66, 133, 244, 0.4);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>📅</span>
+              <span style="font-weight: 700;">구글 & 애플 캘린더 양방향 연동</span>
+            </div>
+            <span style="font-size: 0.75rem;">열기 ➔</span>
+          </button>
+
+          <!-- 3. 데이터 백업 및 복원 -->
+          <button type="button" class="btn btn-outline w-100" id="btnOpenBackup" style="justify-content: space-between; padding: 0.55rem 0.9rem;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>💾</span>
+              <span style="font-weight: 700;">데이터 백업 및 복원 (.json)</span>
+            </div>
+            <span style="font-size: 0.75rem;">열기 ➔</span>
+          </button>
+
+          <!-- 4. 스마트폰 모바일 접속 QR -->
+          <button type="button" class="btn btn-outline w-100" id="btnOpenMobileConnect" style="justify-content: space-between; padding: 0.55rem 0.9rem;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>📱</span>
+              <span style="font-weight: 700;">스마트폰 모바일 접속 주소 & QR</span>
+            </div>
+            <span style="font-size: 0.75rem;">열기 ➔</span>
+          </button>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-subtle); margin: 1.2rem 0;">
+        <button type="button" class="btn btn-outline text-danger w-100" id="btnClearWegovyLogs">
+          🗑️ 모든 투약/체중 기록 삭제 (초기화)
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. 스마트워치 (갤럭시 워치 & 애플워치) 진짜 데이터 연동 가이드 모달 -->
+    <div class="modal-window" id="appleWatchModal" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3>⌚ 스마트워치 실제 데이터 기록 가이드</h3>
+        <button class="btn-close-modal" title="닫기">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; margin-bottom: 1rem;">
+          <div style="font-size: 2rem; margin-bottom: 0.2rem;">⌚ 🔵 🔴</div>
+          <h4 style="font-size: 1.05rem; margin-bottom: 0.2rem;">갤럭시 & 애플워치 실제 측정치 연동</h4>
+          <p class="text-muted" style="font-size: 0.8rem;">
+            가짜 템플릿 없이, 내가 오늘 실제로 땀 흘려 측정한 워치 센서 데이터를 정확히 기록합니다.
+          </p>
+        </div>
+
+        <!-- 방법 1: 워치 화면 실제 수치 직접 입력 -->
+        <div class="apple-guide-step">
+          <div class="guide-badge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald);">방법 1 (가장 추천 - 100% 실제 데이터)</div>
+          <h5>📊 워치 운동 요약 화면 보고 입력 (10초)</h5>
+          <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
+            운동 종료 후 애플워치(활동 kcal, 시간) 또는 갤럭시 워치(소모 칼로리, 심박수) 화면에 뜬 <strong>실제 측정 숫자</strong>를 LifePulse <strong>[🏃 운동]</strong> 탭에 그대로 입력하시면 오차 없이 100% 정확하게 저장됩니다.
+          </p>
+        </div>
+
+        <!-- 방법 2: 단축어 및 루틴을 통한 실제 센서값 자동 수신 -->
+        <div class="apple-guide-step mt-2">
+          <div class="guide-badge" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo);">방법 2 (원클릭 자동 연동)</div>
+          <h5>📲 아이폰 단축어 / 갤럭시 루틴 연동</h5>
+          <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
+            스마트폰의 <strong>단축어(iOS)</strong> 또는 <strong>모드 및 루틴(Android)</strong>에서 운동 종료 시 워치가 측정한 실제 칼로리를 가져와 LifePulse 주소로 자동 전달하도록 설정할 수 있습니다.
+          </p>
+        </div>
+
+        <button type="button" class="btn btn-primary w-100 mt-3 btn-modal-dismiss" style="padding: 0.6rem 1rem;">
+          확인 완료
+        </button>
+      </div>
+    </div>
+
+    <!-- 6. 모바일 환경 접속 및 QR 모달 -->
+    <div class="modal-window" id="mobileConnectModal" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3>📱 스마트폰에서 확인하기</h3>
+        <button class="btn-close-modal" title="닫기">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 1rem;">
+          맥북과 스마트폰이 <strong>같은 Wi-Fi</strong>에 연결되어 있다면<br>
+          스마트폰 기본 카메라로 아래 <strong>QR 코드</strong>를 비추어 즉시 열 수 있습니다.
+        </p>
+
+        <div style="background: #ffffff; padding: 12px; border-radius: 12px; display: inline-block; box-shadow: var(--shadow-sm); margin-bottom: 1rem;">
+          <img id="qrCodeImg" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=http://192.168.45.15:3000" alt="QR Code" width="180" height="180" style="display: block; border-radius: 4px;">
+        </div>
+
+        <div class="form-group" style="text-align: left;">
+          <label>스마트폰 접속 직접 입력 주소</label>
+          <div style="display: flex; gap: 0.4rem;">
+            <input type="text" id="mobileUrlInput" class="form-control" value="http://192.168.45.15:3000" readonly style="font-weight: 700; color: var(--accent-emerald);">
+            <button class="btn btn-outline" id="btnCopyMobileUrl" style="white-space: nowrap;">📋 복사</button>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem; text-align: left; font-size: 0.78rem; line-height: 1.5; margin-top: 0.85rem;">
+          <strong>💡 맥북 화면에서 바로 모바일로 보려면?</strong><br>
+          키보드의 <code>Cmd + Option + I</code>(또는 <code>F12</code>) ➔ <code>Cmd + Shift + M</code>(📱 기기 모드)을 누르면 맥북 브라우저가 즉시 스마트폰 화면 크기로 전환됩니다.
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. 구글 & 애플 캘린더 양방향 연동 모달 -->
+    <div class="modal-window" id="calendarSyncModal" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3>📅 캘린더 양방향 연동 (구글 & 애플)</h3>
+        <button class="btn-close-modal" title="닫기">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; margin-bottom: 1.2rem;">
+          <div style="font-size: 2.2rem; margin-bottom: 0.3rem;">🔄 🍏 🌐 📱</div>
+          <h4 style="font-size: 1.05rem; margin-bottom: 0.2rem;">스마트폰 캘린더와 실시간 연동</h4>
+          <p class="text-muted" style="font-size: 0.8rem;">
+            연동할 항목을 선택하고, 스마트폰 캘린더(애플/구글)와 일정을 양방향으로 주고받으세요.
+          </p>
+        </div>
+
+        <!-- 1층: 연동할 항목 세부 선택 필터 -->
+        <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.85rem; margin-bottom: 1rem;">
+          <div style="font-weight: 800; font-size: 0.82rem; color: var(--text-main); margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center;">
+            <span>🎯 캘린더로 내보낼 항목 선택</span>
+            <span style="font-size: 0.7rem; color: var(--accent-emerald); font-weight: 700;">원하는 항목만 체크</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.45rem; font-size: 0.8rem;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="syncChkMed" checked style="accent-color: var(--accent-primary); width: 16px; height: 16px;">
+              <span>💉 <strong>위고비 / 투약 일정 & 스마트 알림</strong> <small class="text-muted">(15분 전 푸시 알림 포함)</small></span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="syncChkEvent" checked style="accent-color: var(--accent-primary); width: 16px; height: 16px;">
+              <span>📅 <strong>일반 개인 / 업무 일정</strong></span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="syncChkWorkout" checked style="accent-color: var(--accent-primary); width: 16px; height: 16px;">
+              <span>🏃 <strong>운동 세션 & 소모 칼로리 기록</strong></span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="syncChkMeal" style="accent-color: var(--accent-primary); width: 16px; height: 16px;">
+              <span>🍽️ <strong>식사 기록 & 섭취 칼로리</strong> <small class="text-muted">(캘린더 정리 시 미체크 추천)</small></span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="syncChkLedger" style="accent-color: var(--accent-primary); width: 16px; height: 16px;">
+              <span>💰 <strong>가계부 지출 / 수입 내역</strong></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 2층: LifePulse ➔ 스마트폰 / 구글 / 애플 캘린더로 내보내기 -->
+        <div style="margin-bottom: 1.2rem;">
+          <h5 style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-main);">
+            📤 LifePulse 일정 ➔ 스마트폰 캘린더로 등록
+          </h5>
+          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+            <button type="button" class="btn btn-primary w-100" id="btnExportAppleCalendar" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0.6rem;">
+              <span>🍏</span> <strong>애플 캘린더 / 아이폰 원클릭 등록 (.ics)</strong>
+            </button>
+            <button type="button" class="btn btn-outline w-100" id="btnExportGoogleCalendar" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0.6rem; color: #4285f4; border-color: rgba(66, 133, 244, 0.4);">
+              <span>🌐</span> <strong>구글 캘린더 등록용 파일 내보내기 (.ics)</strong>
+            </button>
+          </div>
+          <small class="text-muted" style="font-size: 0.72rem; display: block; margin-top: 4px; line-height: 1.4;">
+            💡 아이폰/맥북에서 버튼을 누르면 다운로드된 캘린더 파일이 열리며 <strong>'모두 추가'</strong> 한 번으로 스마트폰 캘린더에 쏙 들어갑니다.
+          </small>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-subtle); margin: 1rem 0;">
+
+        <!-- 3층: 구글 / 애플 캘린더 ➔ LifePulse로 가져오기 -->
+        <div>
+          <h5 style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-main);">
+            📥 기존 구글 / 애플 캘린더 일정 ➔ LifePulse로 불러오기
+          </h5>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+            구글이나 애플 캘린더에서 내보낸 <code>.ics</code> 파일을 선택하면 기존 일정들이 LifePulse 캘린더에 자동으로 등록됩니다.
+          </p>
+
+          <label for="inputImportIcsFile" class="btn btn-outline w-100" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0.6rem; cursor: pointer; border-style: dashed; border-width: 1.5px;">
+            <span>📂</span> <strong>캘린더 파일(.ics) 선택하여 가져오기</strong>
+          </label>
+          <input type="file" id="inputImportIcsFile" accept=".ics,text/calendar" style="display: none;">
+        </div>
+
+        <button type="button" class="btn btn-outline w-100 mt-3 btn-modal-dismiss" style="padding: 0.6rem 1rem;">
+          닫기
+        </button>
+      </div>
+    </div>
+
+    <!-- 8. 📖 올인원 사용자 가이드 & 사용 설명서 모달 -->
+    <div class="modal-window" id="userGuideModal" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3>📖 LifePulse 사용 설명서 & 기능 가이드</h3>
+        <button class="btn-close-modal" title="닫기">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 1.2rem;">
+        <div style="text-align: center; margin-bottom: 1.2rem;">
+          <div style="font-size: 2.2rem; margin-bottom: 0.3rem;">✨ 💉 🍽️ 🏃 💰 📅</div>
+          <h4 style="font-size: 1.1rem; margin-bottom: 0.2rem;">LifePulse 완벽 마스터 가이드</h4>
+          <p class="text-muted" style="font-size: 0.8rem;">
+            건강 관리, AI 식단 분석, 스마트워치 연동부터 가계부와 캘린더까지 모든 기능을 쉽게 안내해 드립니다.
+          </p>
+        </div>
+
+        <!-- 설명서 섹션 아코디언/카드 목록 -->
+        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+
+          <!-- 1. 💉 위고비 / 의약품 & 체중 관리 -->
+          <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.9rem;">
+            <h5 style="font-size: 0.92rem; color: var(--accent-emerald); font-weight: 800; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 6px;">
+              <span>💉</span> 1. 위고비 / 비만치료제 투약 & 체중 관리
+            </h5>
+            <ul style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; padding-left: 1.1rem; margin: 0;">
+              <li><strong>권장 부위 순환:</strong> 복부(좌/우), 허벅지(좌/우) 4개 영역을 매주 자동으로 번갈아 추천하여 피부 뭉침을 예방합니다.</li>
+              <li><strong>투약 주기 계산:</strong> 투약 기록 시 다음 주사일이 캘린더에 자동으로 계산되어 표시됩니다.</li>
+              <li><strong>체중 감량 추이:</strong> 체중을 입력하면 시작 체중 대비 총 감량치와 BMI, 목표 달성률이 사이드패널 차트에 실시간 반영됩니다.</li>
+            </ul>
+          </div>
+
+          <!-- 2. 🍽️ AI 식단 & 영양 계산 (Gemini AI) -->
+          <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.9rem;">
+            <h5 style="font-size: 0.92rem; color: var(--accent-primary); font-weight: 800; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 6px;">
+              <span>🍽️</span> 2. AI 식단 & 실시간 칼로리 분석 (Google Gemini)
+            </h5>
+            <ul style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; padding-left: 1.1rem; margin: 0;">
+              <li><strong>자연어 문장 자동 분석:</strong> 식사 칸에 <code>햇반 200그램 1개, 김, 참치 1캔</code> 등을 입력하면 타이핑을 멈추는 순간 <strong>AI가 백그라운드에서 실시간으로 정밀 칼로리 계산 및 영양 코칭</strong>을 수행합니다.</li>
+              <li><strong>📸 음식 사진 비전 AI:</strong> 식사 탭에서 음식 사진을 찍거나 업로드하면 메뉴명과 총 칼로리를 자동으로 인식합니다.</li>
+              <li><strong>🔍 공공 식품 영양 DB:</strong> 수박, 참외, 마라탕 등 검색창에 입력 시 공공 DB에서 칼로리를 바로 찾아 추가할 수 있습니다.</li>
+              <li><strong>🔑 무료 API 키:</strong> <code>⚙️ 설정</code>에서 Google Gemini 무료 키를 등록하면 평생 무료로 AI 기능을 무제한 이용할 수 있습니다.</li>
+            </ul>
+          </div>
+
+          <!-- 3. 🏃 스마트워치 & 운동 기록 -->
+          <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.9rem;">
+            <h5 style="font-size: 0.92rem; color: var(--accent-amber); font-weight: 800; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 6px;">
+              <span>🏃</span> 3. 스마트워치 (갤럭시/애플워치) & 운동 관리
+            </h5>
+            <ul style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; padding-left: 1.1rem; margin: 0;">
+              <li><strong>실제 센서값 기록:</strong> 워치 화면에 뜬 활동 칼로리, 운동 시간, 심박수를 입력하여 100% 진성 데이터를 축적합니다.</li>
+              <li><strong>소모 칼로리 자동 계산:</strong> 운동 종류(러닝, 헬스, 수영 등)와 시간을 선택하면 표준 METs 공식에 따라 소모 칼로리가 자동 계산됩니다.</li>
+              <li><strong>단축어 & 루틴:</strong> 아이폰 단축어나 갤럭시 루틴을 활용해 운동 종료 시 자동으로 기록을 수신할 수 있습니다.</li>
+            </ul>
+          </div>
+
+          <!-- 4. 💰 스마트 가계부 & 소비 분석 -->
+          <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.9rem;">
+            <h5 style="font-size: 0.92rem; color: var(--accent-teal); font-weight: 800; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 6px;">
+              <span>💰</span> 4. 스마트 가계부 & 건강 지출 분석
+            </h5>
+            <ul style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; padding-left: 1.1rem; margin: 0;">
+              <li><strong>수입/지출 관리:</strong> 식비, 의료비(위고비 구매), 운동비, 쇼핑 등 카테고리별 지출을 날짜별로 기록합니다.</li>
+              <li><strong>월간/주간 시각화 차트:</strong> 우측 사이드패널에서 이번 달 지출 비중 도넛 차트와 이번 주 요일별 지출 막대 차트를 한눈에 볼 수 있습니다.</li>
+            </ul>
+          </div>
+
+          <!-- 5. 📅 구글 & 애플 캘린더 양방향 연동 -->
+          <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.9rem;">
+            <h5 style="font-size: 0.92rem; color: #4285f4; font-weight: 800; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 6px;">
+              <span>📅</span> 5. 구글 & 애플 캘린더 양방향 연동
+            </h5>
+            <ul style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; padding-left: 1.1rem; margin: 0;">
+              <li><strong>원하는 항목만 골라서 내보내기:</strong> 위고비 투약일, 운동, 약속 등 원하는 항목만 체크하여 스마트폰 캘린더(.ics)로 1초 만에 전송합니다.</li>
+              <li><strong>15분 전 푸시 알림:</strong> 투약일이 되면 스마트폰과 스마트워치로 15분 전 진동 알림이 울립니다.</li>
+              <li><strong>기존 일정 불러오기:</strong> 구글/애플 캘린더의 기존 일정 파일을 넣으면 LifePulse 캘린더에 합쳐져서 나타납니다.</li>
+            </ul>
+          </div>
+
+          <!-- 6. 💾 백업 / 복원 & 스마트폰 접속 -->
+          <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.9rem;">
+            <h5 style="font-size: 0.92rem; color: var(--accent-rose); font-weight: 800; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 6px;">
+              <span>💾</span> 6. 데이터 백업 & 모바일 홈 화면 앱 설치
+            </h5>
+            <ul style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; padding-left: 1.1rem; margin: 0;">
+              <li><strong>1초 백업 & 복원:</strong> <code>💾 백업</code> 메뉴에서 JSON 파일로 다운로드하여 다른 기기나 친구에게 그대로 전달할 수 있습니다.</li>
+              <li><strong>📱 스마트폰 앱 설치:</strong> 스마트폰 브라우저에서 <strong>[공유] ➔ [홈 화면에 추가]</strong>를 누르면 바탕화면에 진짜 앱처럼 아이콘이 생성됩니다.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 설명서 하단: 예시 데이터 삭제 및 내 진짜 기록 시작하기 배너 -->
+        <div style="margin-top: 1.2rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); border: 1.5px solid var(--accent-primary); border-radius: 12px; padding: 1rem; text-align: center;">
+          <div style="font-size: 1.6rem; margin-bottom: 0.2rem;">✨ 🧹 🌱</div>
+          <h5 style="font-size: 0.95rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.3rem;">
+            내용을 모두 이해하셨나요?
+          </h5>
+          <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 0.75rem;">
+            체험용으로 미리 들어가 있던 <strong>예시(샘플) 식단, 운동, 가계부 기록을 모두 깨끗이 지우고</strong><br>
+            오늘부터 나만의 진짜 건강 & 캘린더 기록을 시작할 수 있습니다.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+            <button type="button" class="btn btn-primary w-100" id="btnClearMockDataAndStart" style="padding: 0.65rem 1rem; font-size: 0.86rem; background: linear-gradient(135deg, #6366f1 0%, #10b981 100%);">
+              🧹 예시 데이터 모두 삭제하고 내 기록 시작하기
+            </button>
+            <button type="button" class="btn btn-outline w-100 btn-modal-dismiss" style="padding: 0.5rem 1rem; font-size: 0.8rem; color: var(--text-muted);">
+              예시 데이터 유지하며 설명서 닫기
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module" src="js/app.js?v=4.4.0"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "LifePulse - 헬스 & 가계부 스마트 캘린더",
+  "short_name": "LifePulse",
+  "description": "공휴일 캘린더, 위고비/마운자로 건강 트래커, 스마트 가계부 올인원 앱",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#10b981",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
