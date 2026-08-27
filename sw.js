@@ -2,7 +2,7 @@
  * LifePulse 오프라인 PWA 서비스 워커 (Service Worker)
  * 인터넷이 끊기거나 비행기 모드에서도 100% 오프라인 단독 구동 지원
  */
-const CACHE_NAME = 'lifepulse-v5.3.0';
+const CACHE_NAME = 'lifepulse-v5.4.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -2096,18 +2096,35 @@ a {
     background: var(--accent-teal);
   }
 
-  /* 모바일 바텀시트 모달 스타일 */
+  /* 모바일 모달: 상단 빈 공간 없이 화면 최상단부터 시원하게 꽉 차도록 렌더링 */
   .modal-overlay {
-    align-items: flex-end;
+    align-items: flex-start;
     padding: 0;
   }
   .modal-window {
+    width: 100%;
     max-width: 100%;
-    border-radius: 20px 20px 0 0;
-    max-height: 86vh;
-    border-bottom: none;
-    border-left: none;
-    border-right: none;
+    height: 100%;
+    max-height: 100dvh;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+    margin: 0;
+    transform: none !important;
+  }
+  .modal-header {
+    padding: calc(env(safe-area-inset-top, 0px) + 0.85rem) 1.1rem 0.85rem 1.1rem;
+    position: sticky;
+    top: 0;
+    background: var(--bg-surface);
+    z-index: 10;
+    flex-shrink: 0;
+  }
+  .modal-body {
+    padding: 1rem 1.1rem calc(env(safe-area-inset-bottom, 0px) + 1.2rem) 1.1rem;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* 모바일 모달 탭: 5개 탭이 한 줄로 깨끗하게 나오거나 스크롤되도록 최적화 */
