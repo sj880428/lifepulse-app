@@ -310,11 +310,11 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.65rem 1.5rem;
+  padding: 0.65rem 1.25rem;
   background: linear-gradient(90deg, rgba(16, 185, 129, 0.12) 0%, rgba(99, 102, 241, 0.12) 50%, rgba(244, 63, 94, 0.08) 100%);
   border-bottom: 1px solid var(--border-subtle);
   backdrop-filter: var(--glass-blur);
-  gap: 1.25rem;
+  gap: 1rem;
   position: relative;
   overflow: hidden;
 }
@@ -329,8 +329,15 @@ a {
   background: linear-gradient(180deg, #10b981 0%, #6366f1 100%);
 }
 
-.quote-icon-badge {
+.quote-header-group {
   display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+.quote-icon-badge {
+  display: inline-flex;
   align-items: center;
   gap: 0.45rem;
   background: var(--bg-surface);
@@ -357,10 +364,10 @@ a {
 .quote-text-wrap {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: space-between;
+  gap: 1rem;
   flex: 1;
   min-width: 0;
-  overflow: hidden;
 }
 
 .quote-text {
@@ -368,18 +375,19 @@ a {
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.4;
+  word-break: keep-all;
+  margin: 0;
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .quote-author {
   font-size: 0.76rem;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
+  margin-left: auto;
   transition: opacity 0.25s ease;
 }
 
@@ -1902,43 +1910,60 @@ a {
     border-radius: 4px;
   }
 
-  /* 격언 배너 모바일 최적화 */
+  /* 격언 배너 모바일 최적화 (겹침 원천 방지) */
   .diet-quote-banner {
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.35rem;
-    padding: 0.55rem 0.85rem;
+    align-items: stretch;
+    gap: 0.45rem;
+    padding: 0.6rem 0.85rem;
+  }
+
+  .quote-header-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
   }
 
   .quote-icon-badge {
     font-size: 0.72rem;
+    padding: 0.2rem 0.55rem;
   }
 
   .quote-text-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
     width: 100%;
   }
 
   .quote-text {
-    white-space: normal;
-    font-size: 0.78rem;
-    line-height: 1.4;
+    font-size: 0.82rem;
+    line-height: 1.45;
     word-break: keep-all;
+    white-space: normal;
   }
 
   .quote-author {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
+    align-self: flex-end;
+    margin-left: 0;
+    margin-top: 0.1rem;
+    color: var(--text-muted);
   }
 
   .quote-controls {
-    align-self: flex-end;
-    margin-top: -1.5rem;
+    align-self: auto;
+    margin-top: 0;
     gap: 0.25rem;
   }
 
   .btn-quote-control {
-    width: 24px;
-    height: 24px;
-    font-size: 0.75rem;
+    width: 26px;
+    height: 26px;
+    font-size: 0.8rem;
   }
 
   /* 레이어 필터 터치 최적화 */

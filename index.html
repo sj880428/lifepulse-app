@@ -15,7 +15,7 @@
   <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
   <link rel="apple-touch-icon" href="icons/icon.svg">
   
-  <link rel="stylesheet" href="css/style.css?v=5.1.0">
+  <link rel="stylesheet" href="css/style.css?v=5.2.0">
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 </head>
@@ -69,18 +69,20 @@
 
   <!-- 다이어트 & 건강 동기부여 격언 배너 -->
   <section class="diet-quote-banner" id="dietQuoteBanner">
-    <div class="quote-icon-badge">
-      <span class="sparkle-icon">✨</span>
-      <span>오늘의 다이어트 마인드셋</span>
+    <div class="quote-header-group">
+      <div class="quote-icon-badge">
+        <span class="sparkle-icon">✨</span>
+        <span>오늘의 다이어트 마인드셋</span>
+      </div>
+      <div class="quote-controls">
+        <button class="btn-quote-control" id="btnPrevQuote" title="이전 격언">‹</button>
+        <button class="btn-quote-control" id="btnRandomQuote" title="랜덤 명언">🎲</button>
+        <button class="btn-quote-control" id="btnNextQuote" title="다음 격언">›</button>
+      </div>
     </div>
     <div class="quote-text-wrap">
       <p class="quote-text" id="quoteText">"다이어트는 완벽함이 아니라 꾸준함의 연속입니다."</p>
       <span class="quote-author" id="quoteAuthor">— 지속 가능한 다이어트 습관</span>
-    </div>
-    <div class="quote-controls">
-      <button class="btn-quote-control" id="btnPrevQuote" title="이전 격언">‹</button>
-      <button class="btn-quote-control" id="btnRandomQuote" title="랜덤 명언">🎲</button>
-      <button class="btn-quote-control" id="btnNextQuote" title="다음 격언">›</button>
     </div>
   </section>
 
@@ -1003,6 +1005,6 @@
 
   </div>
 
-  <script type="module" src="js/app.js?v=5.1.0"></script>
+  <script type="module" src="js/app.js?v=5.2.0"></script>
 </body>
 </html>
